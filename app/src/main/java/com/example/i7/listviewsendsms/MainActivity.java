@@ -1,5 +1,7 @@
 package com.example.i7.listviewsendsms;
-
+// https://www.youtube.com/watch?v=Vyo-edmmu0k
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -10,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -72,6 +75,24 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+        //удалит элемент из
+        public void remove(int index) {
+            recordList.remove(index);
+            notifyDataSetChanged();
+        }
+
+        //генерируем текст для СМС
+        public String gerText() {
+            String text = "";
+
+            for (PtoductRecord record : recordList) {
+                text += record.name + ": ";
+                text += record.quantity + "шт × " + record.price + "р\n";
+            }
+            return text;
+
+        }
+
     }
 
     private ProductAdapter adapter;
@@ -83,6 +104,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.layout2);                                                        //  splashscreen - layout
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+// находим кнопку addButton и задаем обработчик onClick исполняем метод onAdd()
+        findViewById(R.id.addButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity.this.onAdd();
+            }
+        });
 
        // анимация hint вверх для EditText
         TextInputLayout tilName = (TextInputLayout) findViewById(R.id.nameEditTextHintUp);
@@ -98,19 +127,50 @@ public class MainActivity extends AppCompatActivity {
         tilPrice.setHint(getString(R.string.product_price));
 
 
-
+// находим кнопку sendButton и задаем обработчик onClick исполняем метод onSend()
         FloatingActionButton sendButton = (FloatingActionButton) findViewById(R.id.sendButton);
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void onClick(View v) {
+                MainActivity.this.onSend();
             }
         });
 
         adapter = new ProductAdapter();                                         // передаем adapter в наш productListView
+
+
         ((ListView) findViewById(R.id.productListView)).setAdapter(adapter);
 
+        ListView list =  ((ListView) findViewById(R.id.productListView));
+        list.setAdapter(adapter);
+
+        // по долгому нажатию (LongClick) на лист ListView
+        // будет инициализирован onRemove(position) -> adapter.remove(), он удалит нажатый элемент
+        list.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                onRemove(position);
+                return true;
+            }
+        });
+
+
+
+
+    }
+
+    // по нажатию  (addSend) - метод onSend создаст интент для взаимодействия с СМС
+    private void onSend() {
+        Intent sendIntent = new Intent(Intent.ACTION_VIEW);
+        sendIntent.setData(Uri.parse("sms:"));
+
+        //установка текста сообщения
+        sendIntent.putExtra("sms_body", adapter.gerText());
+        startActivity(sendIntent);
+    }
+
+    private void onRemove(int position) {         // по нажатию LongClick (addButton) - метод onRemove удалит позицию списка
+        adapter.remove(position);
     }
 
     private void onAdd() {                          // по нажатию добавить (addButton) - метод onAdd получает заполненные EditText
