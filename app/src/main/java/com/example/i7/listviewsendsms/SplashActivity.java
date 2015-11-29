@@ -19,7 +19,7 @@ public class SplashActivity extends AppCompatActivity {
             startActivity(i);
             finish();
         }
-    }, 1 * 1000); // Временной интервал отсрочки действия 1 сек
+    }, 3 * 1000); // Временной интервал отсрочки действия 1 сек
     }
 
 
